@@ -87,6 +87,14 @@ E) Monitoring
 🧹 Cleanup
 cd infra/terraform
 terraform destroy
+
+## ✅ Security, Scalability, Fault Tolerance
+
+- **Networking isolation:** Dedicated VPC, subnets, and security groups for the EKS cluster.
+- **Scalability:** Horizontal Pod Autoscaler (HPA) defined; scales pods based on CPU utilization (requires metrics-server).
+- **Self-healing:** Liveness and readiness probes ensure unhealthy pods are restarted and traffic is routed only to healthy pods.
+- **Access control:** Security Group rules restrict access; currently broad for demo purposes. In a production setup, private subnets with a NAT gateway would be recommended.
+
 ________________________________________
 2) docs/ARCHITECTURE.md
 Architecture
