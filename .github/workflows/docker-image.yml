@@ -96,16 +96,16 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
 
+      # Apply Kubernetes manifests
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/
+
       # Update deployment images dynamically
       - name: Update deployment images
         run: |
           kubectl set image deployment/ui-deployment ui=${{ secrets.DOCKER_HUB_USERNAME }}/ui:${{ github.sha }}
           kubectl set image deployment/catalog-deployment catalog=${{ secrets.DOCKER_HUB_USERNAME }}/catalog:${{ github.sha }}
-
-      # Apply Kubernetes manifests
-      - name: Apply Kubernetes manifests
-        run: |
-          kubectl apply -f k8s/
 
       # Check rollout status
       - name: Check deployment rollout
