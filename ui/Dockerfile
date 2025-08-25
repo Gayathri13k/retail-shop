@@ -1,12 +1,8 @@
-# ======================
-# Build Stage
-# ======================
+# ---------- Build Stage ----------
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023 AS build
 
-# Install Maven + Java 21
-# Install required tools (add tar here)
+# Install Java, tar, gzip (needed for mvnw)
 RUN dnf --setopt=install_weak_deps=False install -q -y \
-    maven \
     java-21-amazon-corretto-headless \
     tar \
     gzip \
@@ -14,43 +10,28 @@ RUN dnf --setopt=install_weak_deps=False install -q -y \
 
 WORKDIR /app
 
-# Copy Maven wrapper & config first (better cache)
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
-# Ensure wrapper is executable (fixes "Permission denied")
-RUN chmod +x mvnw
+# Copy Maven wrapper and project files
+COPY . .
 
-# Pre-fetch dependencies
-RUN ./mvnw -B -q dependency:go-offline
+# Pre-fetch dependencies (cache layer)
+RUN ./mvnw dependency:go-offline -B
 
-# Copy source and build
-COPY src ./src
-RUN ./mvnw -B -q clean package -DskipTests \
-    && mv target/*.jar app.jar
+# Build the jar
+RUN ./mvnw clean package -DskipTests
 
-# ======================
-# Runtime Stage
-# ======================
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023
-
-# Java runtime + non-root user
-RUN dnf --setopt=install_weak_deps=False install -q -y \
-    java-21-amazon-corretto-headless \
-    shadow-utils \
-    && dnf clean all
-
-ENV APPUSER=appuser APPUID=1000 APPGID=1000
-RUN useradd --home "/app" --create-home --user-group --uid "$APPUID" "$APPUSER"
+# ---------- Runtime Stage ----------
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:21-alpine
 
 WORKDIR /app
-USER appuser
 
-# Copy built jar and optional docs
-COPY --from=build /app/app.jar ./app.jar
-COPY ATTRIBUTION.md LICENSES.md ./ || true
+# Copy only the built jar from build stage
+COPY --from=build /app/target/*.jar app.jar
 
+# JVM optimization flags (adjust as needed)
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/urandom"
+
+# Expose port (adjust if your app runs on another)
 EXPOSE 8080
-ENV SPRING_PROFILES_ACTIVE=prod
-ENV JAVA_OPTS=""
 
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
+# Run the app
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
