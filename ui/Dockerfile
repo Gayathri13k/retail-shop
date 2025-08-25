@@ -4,9 +4,11 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023 AS build
 
 # Install Maven + Java 21
+# Install required tools (add tar here)
 RUN dnf --setopt=install_weak_deps=False install -q -y \
     maven \
     java-21-amazon-corretto-headless \
+    tar \
     && dnf clean all
 
 WORKDIR /app
