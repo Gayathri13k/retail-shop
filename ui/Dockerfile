@@ -9,6 +9,7 @@ RUN dnf --setopt=install_weak_deps=False install -q -y \
     maven \
     java-21-amazon-corretto-headless \
     tar \
+    gzip \
     && dnf clean all
 
 WORKDIR /app
