@@ -20,7 +20,7 @@ RUN ./mvnw dependency:go-offline -B
 RUN ./mvnw clean package -DskipTests
 
 # ---------- Runtime Stage ----------
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:21-alpine
+FROM amazoncorretto:21-alpine
 
 WORKDIR /app
 
