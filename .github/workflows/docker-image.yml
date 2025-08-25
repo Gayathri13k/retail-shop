@@ -19,6 +19,8 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Make Maven Wrapper executable
+        run: chmod +x ./ui/mvnw ./catalog/mvnw
       # Run UI tests
       - name: Run tests (UI)
         run: |
