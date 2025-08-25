@@ -3,10 +3,9 @@ kind: Service
 metadata:
   name: catalog-service
 spec:
+  type: LoadBalancer # 👈 change this
   selector:
     app: catalog
   ports:
     - port: 80
       targetPort: 8080
-      nodePort: 30080 # optional, must be in 30000–32767
-  type: NodePort

@@ -3,10 +3,9 @@ kind: Service
 metadata:
   name: ui-service
 spec:
+  type: LoadBalancer # 👈 change this
   selector:
     app: ui
-  type: NodePort
   ports:
-    - port: 80 # service port inside cluster
-      targetPort: 8080 # container port
-      nodePort: 30801 # optional host port on Minikube
+    - port: 80
+      targetPort: 8080
