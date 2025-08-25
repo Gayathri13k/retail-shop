@@ -12,28 +12,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup Java 21
+      # Setup Java 21 for UI
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
-      # Make UI Maven Wrapper executable
+      # Setup Go for Catalog
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+
+      # Make Maven Wrapper executable for UI
       - name: Make Maven Wrapper executable
         run: chmod +x ./ui/mvnw
 
-      # Run UI tests using Maven wrapper
+      # Run UI tests
       - name: Run tests (UI)
         run: |
           cd ui
           ./mvnw test
 
-      # Run Catalog tests using system Maven
+      # Run Catalog tests
       - name: Run tests (Catalog)
         run: |
           cd catalog
-          mvn test
+          go test ./...
 
   docker:
     runs-on: ubuntu-latest
