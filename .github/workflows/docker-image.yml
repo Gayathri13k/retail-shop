@@ -12,49 +12,51 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup Java for Maven builds
+      # Setup Java 21
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
+      # Make UI Maven Wrapper executable
       - name: Make Maven Wrapper executable
         run: chmod +x ./ui/mvnw
-      # Run UI tests
+
+      # Run UI tests using Maven wrapper
       - name: Run tests (UI)
         run: |
           cd ui
           ./mvnw test
 
-      # Run Catalog tests
+      # Run Catalog tests using system Maven
       - name: Run tests (Catalog)
         run: |
           cd catalog
-          ./mvnw test
+          mvn test
 
   docker:
     runs-on: ubuntu-latest
     needs: build-test
     steps:
-      # Checkout code again
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Docker login
+      # Login to Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      # Build & push UI image
+      # Build & Push UI image
       - name: Build & Push UI image
         run: |
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/ui:${{ github.sha }} ./ui
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/ui:${{ github.sha }}
 
-      # Build & push Catalog image
+      # Build & Push Catalog image
       - name: Build & Push Catalog image
         run: |
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/catalog:${{ github.sha }} ./catalog
@@ -74,7 +76,7 @@ jobs:
         with:
           version: latest
 
-      # Configure kubeconfig
+      # Configure kubeconfig from secret
       - name: Configure Kubeconfig
         run: |
           mkdir -p ~/.kube
@@ -86,12 +88,12 @@ jobs:
           kubectl set image deployment/ui-deployment ui=${{ secrets.DOCKER_HUB_USERNAME }}/ui:${{ github.sha }}
           kubectl set image deployment/catalog-deployment catalog=${{ secrets.DOCKER_HUB_USERNAME }}/catalog:${{ github.sha }}
 
-      # Apply all Kubernetes manifests
+      # Apply Kubernetes manifests
       - name: Apply Kubernetes manifests
         run: |
           kubectl apply -f k8s/
 
-      # Check deployment rollout status
+      # Check rollout status
       - name: Check deployment rollout
         run: |
           kubectl rollout status deployment/ui-deployment
